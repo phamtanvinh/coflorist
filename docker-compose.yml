@@ -1,0 +1,73 @@
+version: "3"
+
+services:
+  fresta-app:
+    # build:
+    #   context: .
+    #   dockerfile: ./Dockerfile
+    # image: 'fresta-app:dev'
+    image: "odoo:14"
+    tty: true
+    command: -- --dev=reload
+    depends_on:
+    - fresta-db
+    ports:
+      - "8069:8069"
+    volumes:
+      - fresta_app_data:/var/lib/odoo
+      - ../coflorist:/mnt/extra-addons
+      - ./config:/etc/odoo
+      - ./entrypoint.sh:/entrypoint.sh
+    environment:
+      - HOST=fresta-db
+      - USER=fresta_dev
+      - PASSWORD=123QWEasd
+    restart: always
+
+  fresta-db:
+    image: "postgres:13"
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=fresta_dev
+      - POSTGRES_PASSWORD=123QWEasd
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    restart: always
+    volumes:
+      - fresta_db_data:/var/lib/postgresql/data/pgdata
+
+  portainer:
+    image: portainer/portainer-ce
+    ports: 
+      - 8000:8000 
+      - 9000:9000
+    restart: always
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock 
+    - portainer_data:/data 
+
+  pgadmin:
+    image: dpage/pgadmin4:5
+    ports:
+      - "8080:80"
+    depends_on:
+      - fresta-db
+    restart: always
+    environment: 
+      - PGADMIN_DEFAULT_EMAIL=phamtanvinh.me@gmail.com
+      - PGADMIN_DEFAULT_PASSWORD=123QWEasd
+    volumes: 
+      - pgadmin_data:/var/lib/pgadmin
+
+
+
+volumes:
+  fresta_app_data:
+    external: true
+  fresta_db_data:
+    external: true
+  portainer_data:
+    external: true
+  pgadmin_data:
+    external: true
